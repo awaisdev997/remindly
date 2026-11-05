@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/utils/theme';
 import { useSubscriptions } from '@/context/SubscriptionContext';
@@ -23,10 +24,10 @@ export default function HistoryScreen() {
     fetchSubscriptions('expired', 'All');
   }, [fetchSubscriptions]);
 
-  // Fetch expired subscriptions when the screen first loads.
-  useEffect(() => {
-    loadHistory();
-  }, [loadHistory]);
+  // Fetch expired subscriptions each time this tab comes into focus.
+  // loadHistory is stable (context functions are memoized), so this
+  // runs once per focus — not in a loop.
+  useFocusEffect(loadHistory);
 
   // Filter to only items whose status is 'Expired' (extra safety check).
   const expiredList = subscriptions.filter((s) => s.statusInfo?.status === 'Expired');

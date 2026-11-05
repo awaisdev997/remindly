@@ -2,7 +2,7 @@
 // Manages the current logged-in user, JWT authentication token, and login/register/logout actions.
 // Uses React's built-in createContext, useContext, and useState for beginner-friendly state management.
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import Toast from 'react-native-toast-message';
 import { api } from '@/services/api';
 import { storage } from '@/utils/storage';
@@ -18,7 +18,7 @@ export function AuthProvider({ children }) {
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Check storage on app launch to see if the user is already logged in
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const savedToken = await storage.getItem('auth_token');
       if (!savedToken) {
@@ -49,10 +49,10 @@ export function AuthProvider({ children }) {
       setIsInitialized(true);
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Log in with email and password
-  const login = async (email, password) => {
+  const login = useCallback(async (email, password) => {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/login', { email, password });
@@ -94,10 +94,10 @@ export function AuthProvider({ children }) {
       setIsLoading(false);
       return false;
     }
-  };
+  }, []);
 
   // Register a new user account
-  const register = async (firstName, lastName, gender, email, password) => {
+  const register = useCallback(async (firstName, lastName, gender, email, password) => {
     setIsLoading(true);
     try {
       const response = await api.post('/auth/register', {
@@ -145,10 +145,10 @@ export function AuthProvider({ children }) {
       setIsLoading(false);
       return false;
     }
-  };
+  }, []);
 
   // Log out the current user
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await api.post('/auth/logout');
     } catch (err) {
@@ -164,9 +164,9 @@ export function AuthProvider({ children }) {
       text1: 'Logged out',
       text2: 'You have been safely logged out.',
     });
-  };
+  }, []);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     user,
     token,
     isLoading,
@@ -175,7 +175,7 @@ export function AuthProvider({ children }) {
     register,
     logout,
     checkAuth,
-  };
+  }), [user, token, isLoading, isInitialized, login, register, logout, checkAuth]);
 
   return (
     <AuthContext.Provider value={contextValue}>

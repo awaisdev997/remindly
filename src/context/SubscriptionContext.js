@@ -2,7 +2,7 @@
 // Manages the list of subscriptions, dashboard summary, and CRUD operations.
 // Replaces Zustand with React's built-in createContext, useContext, and useState.
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
 import Toast from 'react-native-toast-message';
 import { api } from '@/services/api';
 import {
@@ -23,7 +23,7 @@ export function SubscriptionProvider({ children }) {
   const [isSummaryLoading, setIsSummaryLoading] = useState(false);
 
   // Fetch the dashboard summary statistics
-  const fetchSummary = async () => {
+  const fetchSummary = useCallback(async () => {
     setIsSummaryLoading(true);
     try {
       const response = await api.get('/subscriptions/summary/dashboard');
@@ -35,10 +35,10 @@ export function SubscriptionProvider({ children }) {
     } finally {
       setIsSummaryLoading(false);
     }
-  };
+  }, []);
 
   // Fetch the list of subscriptions with optional status and category filters
-  const fetchSubscriptions = async (statusFilter = '', category = 'All') => {
+  const fetchSubscriptions = useCallback(async (statusFilter = '', category = 'All') => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -64,10 +64,10 @@ export function SubscriptionProvider({ children }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   // Fetch details for a single subscription by ID
-  const fetchSubscriptionById = async (id) => {
+  const fetchSubscriptionById = useCallback(async (id) => {
     setIsLoading(true);
     try {
       const response = await api.get(`/subscriptions/${id}`);
@@ -87,10 +87,10 @@ export function SubscriptionProvider({ children }) {
       setIsLoading(false);
       return null;
     }
-  };
+  }, []);
 
   // Add a new subscription
-  const addSubscription = async (data) => {
+  const addSubscription = useCallback(async (data) => {
     setIsLoading(true);
     try {
       await api.post('/subscriptions', data);
@@ -130,10 +130,10 @@ export function SubscriptionProvider({ children }) {
       setIsLoading(false);
       return false;
     }
-  };
+  }, [fetchSummary]);
 
   // Update an existing subscription
-  const updateSubscription = async (id, data) => {
+  const updateSubscription = useCallback(async (id, data) => {
     setIsLoading(true);
     try {
       await api.put(`/subscriptions/${id}`, data);
@@ -175,10 +175,10 @@ export function SubscriptionProvider({ children }) {
       setIsLoading(false);
       return false;
     }
-  };
+  }, [fetchSummary]);
 
   // Delete a subscription
-  const deleteSubscription = async (id) => {
+  const deleteSubscription = useCallback(async (id) => {
     try {
       await api.delete(`/subscriptions/${id}`);
       cancelSubscriptionNotifications(id).catch(() => {});
@@ -204,9 +204,9 @@ export function SubscriptionProvider({ children }) {
       });
       return false;
     }
-  };
+  }, [fetchSummary]);
 
-  const contextValue = {
+  const contextValue = useMemo(() => ({
     subscriptions,
     currentSubscription,
     summary,
@@ -218,7 +218,7 @@ export function SubscriptionProvider({ children }) {
     addSubscription,
     updateSubscription,
     deleteSubscription,
-  };
+  }), [subscriptions, currentSubscription, summary, isLoading, isSummaryLoading, fetchSummary, fetchSubscriptions, fetchSubscriptionById, addSubscription, updateSubscription, deleteSubscription]);
 
   return (
     <SubscriptionContext.Provider value={contextValue}>

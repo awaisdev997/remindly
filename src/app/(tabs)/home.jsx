@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,7 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { router } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '@/utils/theme';
 import { useSubscriptions } from '@/context/SubscriptionContext';
@@ -28,10 +28,10 @@ export default function HomeScreen() {
     fetchSummary();
   }, [fetchSummary]);
 
-  // Fetch dashboard data when the screen first loads.
-  useEffect(() => {
-    loadDashboard();
-  }, [loadDashboard]);
+  // Fetch dashboard data each time this tab comes into focus.
+  // loadDashboard is stable (context functions are memoized), so this
+  // runs once per focus — not in a loop.
+  useFocusEffect(loadDashboard);
 
   // Pull values out of the summary object with safe fallbacks.
   const totalMonthly = summary?.totalMonthlyOutflow || 0;

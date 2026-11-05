@@ -9,7 +9,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useFocusEffect } from 'expo-router';
 import { theme } from '@/utils/theme';
 import { useSubscriptions } from '@/context/SubscriptionContext';
 import { SubscriptionCard } from '@/components/SubscriptionCard';
@@ -49,10 +49,10 @@ export default function SubscriptionsScreen() {
     }
   }, [filter]);
 
-  // Re-fetch subscriptions whenever the status or category filter changes.
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
+  // Fetch on focus, and re-fetch whenever the status or category filter
+  // changes while this tab is focused. loadData is stable between filter
+  // changes (context functions are memoized), so no request loop.
+  useFocusEffect(loadData);
 
   return (
     <SafeAreaView style={styles.safeArea}>

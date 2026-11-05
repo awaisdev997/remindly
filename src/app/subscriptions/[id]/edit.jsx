@@ -40,7 +40,7 @@ export default function EditSubscriptionScreen() {
       setFetching(false);
     };
     loadDetail();
-  }, [id]);
+  }, [id, fetchSubscriptionById]);
 
   // handleSubmit is called by SubscriptionForm when the user submits valid changes.
   // `values` contains all validated form fields.
